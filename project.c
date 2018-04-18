@@ -11,6 +11,8 @@ typedef struct
 
 float* readInputDatafile(char* filename, long* num_chars);
 void processCommandLine(int argc, char* argv[]);
+void *threadWork(void* args);  /* Thread function */
+
 
 
 int main() {
@@ -32,40 +34,27 @@ int main() {
     thread_arguments =
     (THREAD_ARG*)malloc(thread_count*sizeof(THREAD_ARG));
 
-   while(s1[n] != '\0') {
+   /* create the threads, give each a unique rank, a random number
+     *   and the number of darts they need to throw. */
+    for (t_rank = 0; t_rank < thread_count; t_rank++)
+    {
+        thread_arguments[t_rank].rank = t_rank;
+        thread_arguments[t_rank].num_vectors = vectors_per_thread;
+        pthread_create(&thread_handles[t_rank],
+                       NULL,
+                       threadWork,
+                       (void*) &(thread_arguments[t_rank])
+                       );
+    }
+    printf("Main thread: All threads have been created.\n");
+    
+    /* wait for all threads to finish */
+    for (t_rank = 0; t_rank < thread_count; t_rank++)
+        pthread_join(thread_handles[t_rank], NULL);
+    
+    printf("Main thread: All threads have completed.\n");
 
-      if(s1[n] == s2[m]) {     // if first character of search string matches
-
-         // keep on searching
-
-         while(s1[n] == s2[m]  && s1[n] !='\0') {
-            n++;
-            m++;
-         }
-
-         // if we sequence of characters matching with the length of searched string
-         if(m == len && (s1[n] == ' ' || s1[n] == '\0')) {
-
-            // BINGO!! we find our search string.
-            times++;
-         }
-      }else {            // if first character of search string DOES NOT match
-         while(s1[n] != ' ') {        // Skip to next word
-            n++;
-            if(s1[n] == '\0')
-            break;
-         }
-      }
-		
-      n++;
-      m=0;  // reset the counter to start from first character of the search string.
-   }
-
-   if(times > 0) {
-      printf("'%s' appears %d time(s)\n", s2, times);
-   }else {
-      printf("'%s' does not appear in the sentence.\n", s2);
-   }
+   
 
    return 0;
 }
@@ -98,4 +87,46 @@ void processCommandLine(int argc, char* argv[]) {
    input_file_name = argv[1];
     thread_count = strtol(argv[2], NULL, 10);
     if (thread_count <= 0 || thread_count > MAX_THREADS) usage(argv[0]);
+}
+
+void *threadWork(void* argstruct)
+{
+    /* unpack the thread arguments */
+    long my_rank = ((THREAD_ARG*)argstruct)->rank;
+    
+    // this stuff is copied and pasted. need to edit this to be paralellized
+    while(s1[n] != '\0') {
+
+      if(s1[n] == s2[m]) {     // if first character of search string matches
+
+         // keep on searching
+
+         while(s1[n] == s2[m]  && s1[n] !='\0') {
+            n++;
+            m++;
+         }
+
+         // if we sequence of characters matching with the length of searched string
+         if(m == len && (s1[n] == ' ' || s1[n] == '\0')) {
+
+            // BINGO!! we find our search string.
+            times++;
+         }
+      }else {            // if first character of search string DOES NOT match
+         while(s1[n] != ' ') {        // Skip to next word
+            n++;
+            if(s1[n] == '\0')
+            break;
+         }
+      }
+      
+      n++;
+      m=0;  // reset the counter to start from first character of the search string.
+   }
+
+   if(times > 0) {
+      printf("'%s' appears %d time(s)\n", s2, times);
+   }else {
+      printf("'%s' does not appear in the sentence.\n", s2);
+   }
 }
