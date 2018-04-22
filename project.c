@@ -13,7 +13,7 @@ float* readInputDatafile(char* filename, long* num_chars);
 void processCommandLine(int argc, char* argv[]);
 void *threadWork(void* args);  /* Thread function */
 
-
+char text[];
 
 int main() {
    char s1[] = "Beauty is in the eye of the beholder";
@@ -23,19 +23,18 @@ int main() {
    int m = 0;
    int times = 0;
    int len = strlen(s2);      // contains the length of search string
+   int num_chars = 0;
 
+
+   /* ALL OF THIS IS PTHREAD STUFF. GOTTA MAKE SERIAL SOLUTION WORK FIRST
    pthread_t* thread_handles;
    THREAD_ARG* thread_arguments;
 
-   /* allocate thread handles */
     thread_handles =
     (pthread_t*)malloc(thread_count*sizeof(pthread_t));
-    /* allocate thread argument structures */
     thread_arguments =
     (THREAD_ARG*)malloc(thread_count*sizeof(THREAD_ARG));
 
-   /* create the threads, give each a unique rank, a random number
-     *   and the number of darts they need to throw. */
     for (t_rank = 0; t_rank < thread_count; t_rank++)
     {
         thread_arguments[t_rank].rank = t_rank;
@@ -48,12 +47,47 @@ int main() {
     }
     printf("Main thread: All threads have been created.\n");
     
-    /* wait for all threads to finish */
     for (t_rank = 0; t_rank < thread_count; t_rank++)
         pthread_join(thread_handles[t_rank], NULL);
     
     printf("Main thread: All threads have completed.\n");
+    */
 
+    // this stuff is copied and pasted. need to edit this to be paralellized
+    while(s1[n] != '\0') {
+
+      if(s1[n] == s2[m]) {     // if first character of search string matches
+
+         // keep on searching
+
+         while(s1[n] == s2[m]  && s1[n] !='\0') {
+            n++;
+            m++;
+         }
+
+         // if we sequence of characters matching with the length of searched string
+         if(m == len && (s1[n] == ' ' || s1[n] == '\0')) {
+
+            // BINGO!! we find our search string.
+            times++;
+         }
+      }else {            // if first character of search string DOES NOT match
+         while(s1[n] != ' ') {        // Skip to next word
+            n++;
+            if(s1[n] == '\0')
+            break;
+         }
+      }
+      
+      n++;
+      m=0;  // reset the counter to start from first character of the search string.
+   }
+
+   if(times > 0) {
+      printf("'%s' appears %d time(s)\n", s2, times);
+   }else {
+      printf("'%s' does not appear in the sentence.\n", s2);
+   }
    
 
    return 0;
@@ -64,10 +98,22 @@ int main() {
 float* readInputDatafile(char* filename, long* num_chars)
 {
    long i = 0, j = 0, n = 0;
-   float* input_vectors;
 
    FILE* fp = fopen(filename, "r");
    if (fp == NULL) return NULL;
+
+   //count how many characters there are in the file
+   while (1) {
+        ch = fgetc(in_file);
+        if (ch == EOF)
+            break;
+        *num_chars++; //???
+    }
+
+    text = malloc(num_chars*sizeof(char));
+
+    fread(myArray, sizeof(myArray), myfile);
+
    fscanf(fp, "%f, %f, %f\n", &(angles[0]), &(angles[1]), &(angles[2]));
    fscanf(fp, "%ld\n", &n);
    *num_vects = n;
